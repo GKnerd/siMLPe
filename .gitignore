@@ -1,0 +1,7 @@
+# Dirs to ignore
+/data/amass
+log/
+runs/
+
+# Python
+__pycache__

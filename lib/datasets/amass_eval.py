@@ -33,27 +33,51 @@ class AMASSEval(data.Dataset):
             return self._file_length
         return len(self._amass_file_names)
 
+    # def _get_amass_names(self):
+
+    #     # create list
+    #     seq_names = []
+    #     assert self._split_name == 'test'
+
+    #     seq_names += open(
+    #         os.path.join(self._amass_anno_dir, "amass_test.txt"), 'r'
+    #         ).readlines()
+
+    #     file_list = []
+    #     for dataset in seq_names:
+    #         dataset = dataset.strip()
+    #         subjects = glob.glob(self._amass_anno_dir + '/' + dataset + '/*')
+    #         for subject in subjects:
+    #             if os.path.isdir(subject):
+    #                 files = glob.glob(subject + '/*poses.npz')
+    #                 file_list.extend(files)
+    #     #file_list = file_list[:10]
+    #     return file_list
+
     def _get_amass_names(self):
+            # create list
+            seq_names = []
 
-        # create list
-        seq_names = []
-        assert self._split_name == 'test'
-
-        seq_names += open(
-            os.path.join(self._amass_anno_dir, "amass_test.txt"), 'r'
-            ).readlines()
-
-        file_list = []
-        for dataset in seq_names:
-            dataset = dataset.strip()
-            subjects = glob.glob(self._amass_anno_dir + '/' + dataset + '/*')
-            for subject in subjects:
-                if os.path.isdir(subject):
-                    files = glob.glob(subject + '/*poses.npz')
+            if self._split_name == 'train' :
+                txt_path = os.path.join(self._root_dir, 'data', 'amass_train.txt')
+            else :
+                txt_path = os.path.join(self._root_dir, 'data', 'amass_test.txt')
+            
+            with open(txt_path, 'r') as f:
+                lines = f.readlines()
+                seq_names.extend([line.strip() for line in lines if line.strip()])
+            # seq_names += np.loadtxt(txt_path, dtype=str).tolist()
+            print(seq_names)
+            file_list = []
+            for dataset in seq_names:
+                dataset_path = os.path.join(self._amass_anno_dir, dataset)
+                
+                if os.path.isdir(dataset_path):
+                    files = glob.glob(os.path.join(dataset_path, '**', '*poses.npz'), recursive=True)
                     file_list.extend(files)
-        #file_list = file_list[:10]
-        return file_list
-
+                    
+            return file_list
+    
     def _load_skeleton(self):
 
         skeleton_info = np.load(

@@ -31,29 +31,53 @@ class AMASSDataset(data.Dataset):
             return self._file_length
         return len(self._all_amass_motion_poses)
 
-    def _get_amass_names(self):
+    # def _get_amass_names(self):
 
+    #     # create list
+    #     seq_names = []
+
+    #     if self._split_name == 'train' :
+    #         seq_names += np.loadtxt(
+    #             os.path.join(self._amass_anno_dir.replace('amass', ''), "amass_train.txt"), dtype=str
+    #             ).tolist()
+    #     else :
+    #         seq_names += np.loadtxt(
+    #             os.path.join(self._amass_anno_dir.replace('amass', ''), "amass_test.txt"), dtype=str
+    #             ).tolist()
+
+    #     file_list = []
+    #     for dataset in seq_names:
+    #         subjects = glob.glob(self._amass_anno_dir + '/' + dataset + '/*')
+    #         for subject in subjects:
+    #             if os.path.isdir(subject):
+    #                 files = glob.glob(subject + '/*poses.npz')
+    #                 file_list.extend(files)
+    #     return file_list
+
+    def _get_amass_names(self):
         # create list
         seq_names = []
 
+        # 1. Look for the text files directly in the repo's data directory
         if self._split_name == 'train' :
-            seq_names += np.loadtxt(
-                os.path.join(self._amass_anno_dir.replace('amass', ''), "amass_train.txt"), dtype=str
-                ).tolist()
+            txt_path = os.path.join(self._root_dir, 'data', 'amass_train.txt')
         else :
-            seq_names += np.loadtxt(
-                os.path.join(self._amass_anno_dir.replace('amass', ''), "amass_test.txt"), dtype=str
-                ).tolist()
+            txt_path = os.path.join(self._root_dir, 'data', 'amass_test.txt')
+            
+        seq_names += np.loadtxt(txt_path, dtype=str).tolist()
 
         file_list = []
         for dataset in seq_names:
-            subjects = glob.glob(self._amass_anno_dir + '/' + dataset + '/*')
-            for subject in subjects:
-                if os.path.isdir(subject):
-                    files = glob.glob(subject + '/*poses.npz')
-                    file_list.extend(files)
+            dataset_path = os.path.join(self._amass_anno_dir, dataset)
+            
+            if os.path.isdir(dataset_path):
+                # 2. The magical recursive search! 
+                # '**' combined with recursive=True tells Python to dig as deep as necessary
+                files = glob.glob(os.path.join(dataset_path, '**', '*poses.npz'), recursive=True)
+                file_list.extend(files)
+                
         return file_list
-
+    
     def _preprocess(self, amass_motion_feats):
         if amass_motion_feats is None:
             return None
